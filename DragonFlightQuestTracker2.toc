@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: Dragon Flight Quest Tracker 2
+## Notes: Retail-style quest tracker. Requires the ClassicAPI DLL (version 10500+).
+## Version: 2.0
+## Author: YourName
+## SavedVariables: DFQT_QuestItemCache, DFQT_FramePosition, DFQT2_Settings
+
+QuestTypeOverrides.lua
+DragonFlightQuestTracker2.lua

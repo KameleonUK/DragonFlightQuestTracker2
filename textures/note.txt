@@ -1,0 +1,10 @@
+objective completed, flash texture right hand edge spawns at objective mid point, slides right to hit right edge of objective then fades out.
+
+Do the fade out on update first, then work out slide right.
+
+
+The same animiation plays on quest completed but on the quest title and also plays when you pick up a new quest, also on the quest title
+
+Circular icon displayed next to quest is 3 dots whilst quest is not complete switching to a yellow question mark icon on brown background when quest is ready for hand in. There's a white highlight mouseover texture too.
+
+Clicking the circle icon focuses the quest which yellow glows the icon with a yellow background (not brown) and shows a game world marker where to go (can't do this in 1.12 without Balake's superwow 2 feature.)
