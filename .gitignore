@@ -1,6 +1,7 @@
 # Tooling folders - not part of the addon
 .claude/
 .vscode/
+.gitignore
 
 # Dev reference material - not for the repo
 screenshots/
