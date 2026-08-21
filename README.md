@@ -1,4 +1,5 @@
-This addon requires ClassicAPI by Brues, it will not work without it! https://github.com/brues-code/ClassicAPI
+This addon requires ClassicAPI by Brues, it will not work without it!
+https://github.com/brues-code/ClassicAPI
 
 Here is a small addon to add a visual backport of the Quest Log Tracker that was added at some point to the modern WoW client.
 I wanted my quest tracker to visually fit in with the Dragonflight Reloaded UI and so this addon was created to fill that gap.
