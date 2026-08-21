@@ -22,7 +22,6 @@ Right click the Quest Tracker header for the options or type /dfqt in game for t
 <img width="592" height="845" alt="Screenshot 2026-08-20 175913" src="https://github.com/user-attachments/assets/2ffa9b74-9558-43f4-858c-64b1793f9d51" />
 Quest Log with pfQuest integration orb buttons
 
-
 <img width="745" height="578" alt="Screenshot 2026-08-20 180210" src="https://github.com/user-attachments/assets/85b6e07d-54de-4021-8588-224a642b59cb" />
 Config Menu
 
