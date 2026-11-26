@@ -75,6 +75,10 @@ local maxQuestsShown = {
     pvp = 3
 }
 local maxQuestsShownExpanded = 7 -- limit for secondary types when all others are minimised
+-- Quest buttons sit this far in from the headers' left edge, which lines the
+-- quest titles (10 into the button) up with the section header text (31 in).
+-- Section headers chained below a quest button subtract it again.
+local questButtonInset = 21
 
 -- Forward declarations: every addon function is file-local - nothing external
 -- (engine, XML, other addons) ever calls them by name, so none need to be
@@ -289,9 +293,18 @@ QuestTrackerFrame:SetHeight(38) -- was 32 but looked too narrow vs retail
 QuestTrackerFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
 -- Set the background texture
+-- Retail's ui-questtracker-primary-objective-header, drawn as retail does:
+-- at its own 300x40 size (transparent padding included, ~31px of visible
+-- band), centered on the header. The .tga holds retail's 2x art (600x80)
+-- unscaled in the top-left of a power-of-two 1024x128 canvas; the tex
+-- coords crop to the art. (The old df_main_header.blp had the padding
+-- cropped off and the band stretched, which drew it ~20% too tall.)
 local bgTexture = QuestTrackerFrame:CreateTexture(nil, "BACKGROUND")
-bgTexture:SetAllPoints(QuestTrackerFrame)
-bgTexture:SetTexture("Interface\\AddOns\\DragonFlightQuestTracker2\\textures\\df_main_header.blp")
+bgTexture:SetWidth(300)
+bgTexture:SetHeight(40)
+bgTexture:SetPoint("CENTER", QuestTrackerFrame, "CENTER", 0, 0)
+bgTexture:SetTexture("Interface\\AddOns\\DragonFlightQuestTracker2\\textures\\ui-questtracker-primary-objective-header.tga")
+bgTexture:SetTexCoord(0, 600 / 1024, 0, 80 / 128)
 
 -- Make the frame moveable
 QuestTrackerFrame:SetMovable(true)
@@ -353,14 +366,22 @@ end)
 
 -- Create the "All Objectives" text on the left side
 local objectivesText = QuestTrackerFrame:CreateFontString("QuestTrackerObjectivesText", "OVERLAY", "GameFontNormalLarge")
-objectivesText:SetPoint("LEFT", QuestTrackerFrame, "LEFT", 25, 3)
+-- 14pt to match retail's ObjectiveTrackerHeaderFont (GameFontNormalLarge is
+-- 16pt; its colour and shadow already match retail, so keep those)
+local headerFontPath, _, headerFontFlags = objectivesText:GetFont()
+objectivesText:SetFont(headerFontPath, 14, headerFontFlags)
+-- x/y measured against a retail screenshot: text starts ~12 units inside
+-- the visible band and sits on its vertical centre
+objectivesText:SetPoint("LEFT", QuestTrackerFrame, "LEFT", 31, 0)
 objectivesText:SetText("All Objectives")
 
 -- Create the minimize button on the right side
 local minimizeButton = CreateFrame("Button", "QuestTrackerMinimizeButton", QuestTrackerFrame)
 minimizeButton:SetWidth(20)
 minimizeButton:SetHeight(20)
-minimizeButton:SetPoint("RIGHT", QuestTrackerFrame, "RIGHT", -10, 0)
+-- Retail anchors this 1 unit inside a 260-wide header whose 300-wide art
+-- overhangs by 20 each side; our header is as wide as the art, so -21
+minimizeButton:SetPoint("RIGHT", QuestTrackerFrame, "RIGHT", -21, 0)
 
 -- Set button textures
 minimizeButton:SetNormalTexture("Interface\\Addons\\DragonFlightQuestTracker2\\textures\\main_header_minimise_all.blp")
@@ -524,24 +545,40 @@ function CreateObjectiveTracker(type, parentFrame, yOffset)
     childFrame.isSectionHeader = true
     childFrame:SetWidth(300)
     childFrame:SetHeight(32)
-    childFrame:SetPoint("TOP", lParentFrame, "BOTTOM", 0, lYOffset)
+    -- Left-edge anchoring keeps every header aligned with the main header,
+    -- whatever sits above: a quest button is inset, so take that back off
+    local xOffset = 0
+    if lParentFrame.isQuestButton then
+        xOffset = -questButtonInset
+    end
+    childFrame:SetPoint("TOPLEFT", lParentFrame, "BOTTOMLEFT", xOffset, lYOffset)
 
 
     -- Apply custom background texture
+    -- Retail's UI-QuestTracker-Secondary-Objective-Header at its own 300x30
+    -- size (~26px visible band): 2x art (600x60) in a 1024x64 canvas, same
+    -- approach as the main header background
     local bgTexture = childFrame:CreateTexture(nil, "BACKGROUND")
-    bgTexture:SetAllPoints(childFrame)
-    bgTexture:SetTexture("Interface\\AddOns\\DragonFlightQuestTracker2\\textures\\df_section_header.blp")
+    bgTexture:SetWidth(300)
+    bgTexture:SetHeight(30)
+    bgTexture:SetPoint("CENTER", childFrame, "CENTER", 0, 0)
+    bgTexture:SetTexture("Interface\\AddOns\\DragonFlightQuestTracker2\\textures\\ui-questtracker-secondary-objective-header.tga")
+    bgTexture:SetTexCoord(0, 600 / 1024, 0, 60 / 64)
 
 
     -- Create section label text (e.g., "Quests [3]", "Elite [1]")
     local typeText = childFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    typeText:SetPoint("LEFT", childFrame, "LEFT", 25, 0)
+    local sectionFontPath, _, sectionFontFlags = typeText:GetFont()
+    typeText:SetFont(sectionFontPath, 14, sectionFontFlags) -- retail header size, as for "All Objectives"
+    typeText:SetPoint("LEFT", childFrame, "LEFT", 31, 0) -- same inset as "All Objectives"
 
     -- Create minimize/maximize toggle button
     local minimizeButton = CreateFrame("Button", nil, childFrame)
     minimizeButton:SetWidth(16)
     minimizeButton:SetHeight(16)
-    minimizeButton:SetPoint("RIGHT", childFrame, "RIGHT", -10, 0)
+    -- centred under the main header's 20-wide button (right edge -21, so
+    -- centre 31 in), as in retail; this button is 16 wide
+    minimizeButton:SetPoint("RIGHT", childFrame, "RIGHT", -23, 0)
 
     -- Use cached reverse lookup to find quest type key from display label
     local questTypeKey = questLabelToType[lType]
@@ -600,7 +637,8 @@ function CreateObjectiveTracker(type, parentFrame, yOffset)
             local scrollUpButton = CreateFrame("Button", nil, childFrame)
             scrollUpButton:SetWidth(24)
             scrollUpButton:SetHeight(24)
-            scrollUpButton:SetPoint("TOPRIGHT", childFrame, "BOTTOMRIGHT", -7, -5)
+            -- 24 wide, centred under the section's +/- button (centre 31 in)
+            scrollUpButton:SetPoint("TOPRIGHT", childFrame, "BOTTOMRIGHT", -19, -5)
 
             scrollUpButton:SetNormalTexture("Interface\\MainMenuBar\\UI-MainMenu-ScrollUpButton-Up")
             scrollUpButton:SetPushedTexture("Interface\\MainMenuBar\\UI-MainMenu-ScrollUpButton-Down")
@@ -1133,7 +1171,8 @@ function CreateQuestButtons(questType, parentFrame, quests)
         local quest = lQuests[i]
         -- Create quest button frame
         local questButton = CreateFrame("Button", nil, lParentFrame)
-        questButton:SetWidth(280)
+        questButton:SetWidth(269)            -- right edge 10 in from the header's, as before the inset
+        questButton.isQuestButton = true     -- CreateObjectiveTracker undoes the inset for a header chained below
         questButton.questID = quest.questID -- Store for later lookup via FindQuestButtonByQuestID
 
         -- Gossip turn-in glow (todo #6): a soft pulsing gold border, shown
@@ -1341,9 +1380,9 @@ function CreateQuestButtons(questType, parentFrame, quests)
 
         -- Anchor to section header or previous quest button
         if i == startIndex then -- Changed from: if i == 1 then
-            questButton:SetPoint("TOP", lParentFrame, "BOTTOM", 0, -10)
+            questButton:SetPoint("TOPLEFT", lParentFrame, "BOTTOMLEFT", questButtonInset, -10)
         else
-            questButton:SetPoint("TOP", lastButton, "BOTTOM", 0, -2)
+            questButton:SetPoint("TOPLEFT", lastButton, "BOTTOMLEFT", 0, -2)
         end
 
         -- Create quest title text
